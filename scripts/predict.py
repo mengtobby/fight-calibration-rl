@@ -97,7 +97,7 @@ def main(argv: list[str] | None = None) -> int:
                 market = market_prob_a(bout)
                 shown = request.opts.odds_override_prob_a
                 if shown is None and request.opts.include_odds:
-                    shown = market_prob_a(bout.swapped()) if request.swapped else market
+                    shown = market  # original-A perspective, like p_a
                 for sample, text in enumerate(texts):
                     p = probabilities[index] if args.mode == "pick" else parse_probability(text)
                     rows.append(

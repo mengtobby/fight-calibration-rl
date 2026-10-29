@@ -130,3 +130,13 @@ def test_pick_context_uses_joint_answer_tokenization() -> None:
     context, ids = _pick_token_context(FusedTokenizer(), [])
     assert context == [10, 11, 12]
     assert ids == (101, 102)
+
+
+def test_perturb_direction_independent_of_corner_swap() -> None:
+    from hashlib import sha256
+
+    ids = [f"bout-{i}" for i in range(400)]
+    swapped = [sha256(f"0:{b}".encode()).digest()[0] < 128 for b in ids]
+    up = [perturb_market(0.5, 0, b) > 0.5 for b in ids]
+    agreement = sum(s == u for s, u in zip(swapped, up, strict=True)) / len(ids)
+    assert 0.4 < agreement < 0.6

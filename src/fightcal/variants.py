@@ -15,7 +15,8 @@ def perturb_market(p: float, seed: int, bout_id: str, shift: float = 0.15) -> fl
         raise ValueError("p must be a finite probability in [0, 1]")
     if not math.isfinite(shift) or shift <= 0:
         raise ValueError("shift must be finite and positive")
-    sign = 1 if sha256(f"{seed}:{bout_id}".encode()).digest()[0] < 128 else -1
+    # Salted so the direction is independent of randomize_corners, which hashes seed:bout_id.
+    sign = 1 if sha256(f"perturb:{seed}:{bout_id}".encode()).digest()[0] < 128 else -1
     result = min(0.95, max(0.05, p + sign * shift))
     if result == p:
         result = min(0.95, max(0.05, p - sign * shift))

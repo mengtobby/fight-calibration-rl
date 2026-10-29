@@ -88,7 +88,7 @@ def run_grpo(cfg: GRPORunConfig) -> str:
     trainer.train()
     trainer.save_model(str(output))
     tokenizer.save_pretrained(str(output))
-    (output / "config.json").write_text(
+    (output / "fightcal_run.json").write_text(
         json.dumps(cfg.to_dict(), indent=2) + "\n", encoding="utf-8"
     )
     return str(output)

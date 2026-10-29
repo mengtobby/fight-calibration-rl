@@ -18,8 +18,8 @@ nothing runs locally. Open `notebooks/kaggle_run.ipynb` in a new Kaggle notebook
    `runs/<arm>`, predictions in `runs/<arm>.jsonl`, and reports in `runs/report/report.md`
    and `report.json`. Combine prediction files from separate sessions before reporting.
 
-Allow roughly 20–90 minutes for base inference, 30–90 minutes for SFT training,
-and 2–6 hours per 300-step GRPO arm, plus inference. These are planning estimates,
+Allow roughly 20-90 minutes for base inference, 30-90 minutes for SFT training,
+and 2-6 hours per 300-step GRPO arm, plus inference. These are planning estimates,
 not benchmarks; GPU allocation, token lengths and free quotas vary. Try `--limit 20`
 with prediction and `--max-steps 5` with training for an initial smoke run. Keep smoke
 outputs separate from final experiment outputs. Reduce inference batch size for memory
