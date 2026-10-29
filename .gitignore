@@ -9,9 +9,9 @@ htmlcov/
 .ipynb_checkpoints/
 
 # data and run outputs (large / license-restricted; regenerate with scripts/)
-data/
-runs/
-outputs/
-wandb/
+/data/
+/runs/
+/outputs/
+/wandb/
 *.safetensors
 *.bin
