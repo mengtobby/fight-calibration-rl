@@ -73,13 +73,39 @@ def generate_completions(
     return result
 
 
+def _pick_token_context(tok: Any, messages: list) -> tuple[list[int], tuple[int, int]]:
+    """Find the label decision in jointly tokenized, training-format answers.
+
+    For Qwen the differing tokens are typically '>A' and '>B', so the shared
+    context ends at '<answer', before the closing angle bracket.
+    """
+    prompt = tok.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+    answers = [
+        tok.encode(prompt + ANSWER_PREFIX + letter + "</answer>", add_special_tokens=False)
+        for letter in ("A", "B")
+    ]
+    for index, (a, b) in enumerate(zip(*answers, strict=False)):
+        if a != b:
+            if index == 0:
+                raise ValueError("answer tokenizations must have a nonempty shared context")
+            return answers[0][:index], (a, b)
+    raise ValueError("A and B answers must have distinct tokenizations")
+
+
 def pick_probabilities(model: Any, tok: Any, messages_batch: list) -> list[float]:
+    """Normalize logits at the first differing token of the trained A/B answers."""
     import torch
 
     if not messages_batch:
         return []
-    inputs = _inputs(model, tok, messages_batch, [ANSWER_PREFIX] * len(messages_batch))
-    ids = [tok.encode(letter, add_special_tokens=False)[0] for letter in ("A", "B")]
+    contexts = [_pick_token_context(tok, messages) for messages in messages_batch]
+    tok.padding_side = "left"
+    inputs = tok.pad(
+        [{"input_ids": context, "attention_mask": [1] * len(context)} for context, _ in contexts],
+        padding=True,
+        return_tensors="pt",
+    ).to(model.device)
+    ids = torch.tensor([pair for _, pair in contexts], device=model.device)
     with torch.inference_mode():
-        logits = model(**inputs).logits[:, -1, ids].float()
+        logits = model(**inputs).logits[:, -1, :].float().gather(1, ids)
         return logits.softmax(dim=-1)[:, 0].cpu().tolist()

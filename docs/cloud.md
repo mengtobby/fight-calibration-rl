@@ -37,3 +37,11 @@ For Colab, upload the notebook, select Runtime > Change runtime type > T4 GPU,
 and upload `ufc-master.csv` into `/content` before running the data cell. The same
 notebook uses `/content/runs`. Download outputs or copy them to mounted Drive before
 runtime expiry; Colab storage is temporary too. No paid GPU service is required.
+
+Odds-conditioned arms keep odds in their base, swapped and reasoning-swap prompts.
+The runner passes `--include-odds` for these arms; the prediction CLI also recognizes
+odds arm names. For a custom odds-conditioned arm, pass `--include-odds` explicitly.
+Swapped prompts use the swapped fighters' own odds. Pick-mode probabilities normalize
+logits at the first differing token of the jointly tokenized full A/B answers, matching
+the SFT answer format (including tokenizers that fuse the angle bracket and letter).
+Regenerate prediction files made before these fixes; `--resume` preserves existing rows.

@@ -91,3 +91,42 @@ def test_perspective() -> None:
     with pytest.raises(ValueError):
         to_original_perspective(2, False)
     assert build_forced_answer_prefix("abc") == "<think>abc</think>\n<answer>"
+
+
+def test_odds_arm_diagnostics_keep_market_condition() -> None:
+    from fightcal.data.odds import market_prob_a
+    from fightcal.prompts import render_matchup
+
+    records = bouts()
+    base = {b.bout_id: "<think>reason</think><answer>.5</answer>" for b in records}
+    requests = plan_variants(
+        records,
+        ["base", "swapped", "reasoning_swap"],
+        base_completions=base,
+        base_include_odds=True,
+    )
+    for request in requests:
+        assert request.opts.include_odds
+        assert request.opts.odds_override_prob_a is None
+        bout = next(b for b in records if b.bout_id == request.bout_id)
+        shown_bout = bout.swapped() if request.swapped else bout
+        card = render_matchup(shown_bout, request.opts)
+        assert f"de-vigged P(A)={market_prob_a(shown_bout):g}" in card
+
+
+def test_pick_context_uses_joint_answer_tokenization() -> None:
+    from fightcal.infer import _pick_token_context
+
+    class FusedTokenizer:
+        def apply_chat_template(self, messages: list, **kwargs: object) -> str:
+            return "chat:"
+
+        def encode(self, text: str, *, add_special_tokens: bool) -> list[int]:
+            assert not add_special_tokens
+            # The letter is fused with '>'; standalone A/B ids are never requested.
+            assert text in ("chat:<answer>A</answer>", "chat:<answer>B</answer>")
+            return [10, 11, 12, 101 if ">A" in text else 102, 13, 14]
+
+    context, ids = _pick_token_context(FusedTokenizer(), [])
+    assert context == [10, 11, 12]
+    assert ids == (101, 102)
