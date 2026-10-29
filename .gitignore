@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.ipynb_checkpoints/
+
+# data and run outputs (large / license-restricted; regenerate with scripts/)
+data/
+runs/
+outputs/
+wandb/
+*.safetensors
+*.bin

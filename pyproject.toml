@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fightcal"
+version = "0.1.0"
+description = "Calibrated reasoning RL for MMA fight prediction: GRPO with proper scoring rules vs outcome fine-tuning vs betting markets"
+requires-python = ">=3.11"
+dependencies = ["numpy>=1.26", "pandas>=2.1", "scipy>=1.11", "scikit-learn>=1.4"]
+
+[project.optional-dependencies]
+model = [
+  "torch>=2.3",
+  "transformers>=4.51",
+  "trl>=0.19",
+  "peft>=0.13",
+  "datasets>=2.20",
+  "accelerate>=0.33",
+]
+dev = ["pytest>=8", "pytest-cov>=5", "ruff>=0.6"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+markers = ["model: needs torch/transformers/trl and model weights (skipped by default)"]
+addopts = "-m 'not model'"
+
+[tool.coverage.run]
+source = ["fightcal"]
+# Thin wrappers around torch/transformers/trl; exercised only on cloud GPUs.
+omit = ["src/fightcal/train/grpo.py", "src/fightcal/train/sft.py", "src/fightcal/infer.py"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "NPY"]
