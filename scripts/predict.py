@@ -19,6 +19,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--adapter")
     parser.add_argument("--mode", choices=["reason_prob", "pick"], default="reason_prob")
     parser.add_argument("--variants")
+    parser.add_argument("--include-odds", action="store_true")
     parser.add_argument("--n-samples", type=int, default=4)
     parser.add_argument("--temperature", type=float, default=0.7)
     parser.add_argument("--batch-size", type=int, default=4)
@@ -59,7 +60,13 @@ def main(argv: list[str] | None = None) -> int:
         write_predictions(args.out, [])
     model, tok = load_model(args.model, args.adapter)
     for name in names:
-        requests = plan_variants(bouts, [name], base_completions=base, seed=args.seed)
+        requests = plan_variants(
+            bouts,
+            [name],
+            base_completions=base,
+            seed=args.seed,
+            base_include_odds=args.include_odds or "odds" in args.arm,
+        )
         requests = [r for r in requests if (r.bout_id, r.variant) not in done]
         for start in range(0, len(requests), args.batch_size):
             batch = requests[start : start + args.batch_size]
@@ -90,7 +97,7 @@ def main(argv: list[str] | None = None) -> int:
                 market = market_prob_a(bout)
                 shown = request.opts.odds_override_prob_a
                 if shown is None and request.opts.include_odds:
-                    shown = market
+                    shown = market_prob_a(bout.swapped()) if request.swapped else market
                 for sample, text in enumerate(texts):
                     p = probabilities[index] if args.mode == "pick" else parse_probability(text)
                     rows.append(

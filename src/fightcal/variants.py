@@ -49,6 +49,7 @@ def plan_variants(
     *,
     base_completions: dict[str, str] | None = None,
     seed: int = 0,
+    base_include_odds: bool = False,
 ) -> list[VariantRequest]:
     records, names = list(bouts), list(variants)
     allowed = {"base", "odds_in_prompt", "odds_perturbed", "swapped", "reasoning_swap"}
@@ -79,7 +80,8 @@ def plan_variants(
                     bout.bout_id,
                     name,
                     PromptOptions(
-                        include_odds=name in {"odds_in_prompt", "odds_perturbed"},
+                        include_odds=base_include_odds
+                        or name in {"odds_in_prompt", "odds_perturbed"},
                         odds_override_prob_a=override,
                     ),
                     name == "swapped",
